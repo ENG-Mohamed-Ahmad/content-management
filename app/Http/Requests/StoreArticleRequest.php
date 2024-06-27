@@ -27,4 +27,15 @@ class StoreArticleRequest extends FormRequest
             'images.*' => 'nullable|image|mimes:jpg,png,gif,jpeg',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'The article title is required.',
+            'title.unique' => 'The article title must be unique.',
+            'content.string' => 'The content must be a string.',
+            'images.*.image' => 'Each file must be an image.',
+            'images.*.mimes' => 'image must be type of jpg, png, gif, or jpeg.',
+        ];
+    }
 }

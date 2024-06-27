@@ -8,6 +8,7 @@ use App\Services\ImageService;
 use App\Services\ArticleService;
 use App\Http\Requests\StoreArticleRequest;
 use App\Traits\GeneralTrait;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Input\Input;
 
 class ArticleController extends Controller
@@ -26,28 +27,48 @@ class ArticleController extends Controller
     // store article
     public function store(StoreArticleRequest $request)
     {        
-        $article = $this->articleService->createArticle($request);
+        DB::beginTransaction();
 
-        $this->imageService->storeImages($request, $article);
-        
-        if ($request->ajax()) {
-            return $this->updatedResponseData($article);
+        try {
+            $article = $this->articleService->createArticle($request);
+
+            $this->imageService->storeImages($request, $article);
+            
+            if ($request->ajax()) {
+                return $this->updatedResponseData($article);
+            }
+
+            return redirect()->route('articles.index')->with('success', 'Article created successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax()) {
+                return $this->serverResponseError();
+            }
+            return redirect()->route('articles.index')->with('error', 'Failed to create article');
         }
-
-        return redirect()->route('articles.index')->with('success', 'Article created successfully');
     }
     
     // update article
     public function update(StoreArticleRequest $request, Article $article)
-    {        
-        $article = $this->articleService->updateArticle($request, $article);
+    {       
+        DB::beginTransaction();
 
-        $this->imageService->updateImages($request, $article);
+        try { 
+            $article = $this->articleService->updateArticle($request, $article);
 
-        if ($request->ajax()) {
-            return $this->updatedResponseData($article);
+            $this->imageService->updateImages($request, $article);
+
+            if ($request->ajax()) {
+                return $this->updatedResponseData($article);
+            }
+            return redirect()->route('articles.index')->with('success', 'Article updated successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax()) {
+                return $this->responseData($e->getMessage(), 500);
+            }
+            return redirect()->route('articles.index')->with('error', 'Failed to create article');
         }
-        return redirect()->route('articles.index')->with('success', 'Article updated successfully');
     }
 
 
