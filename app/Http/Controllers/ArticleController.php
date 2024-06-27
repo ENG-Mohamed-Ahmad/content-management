@@ -42,7 +42,7 @@ class ArticleController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             if ($request->ajax()) {
-                return $this->serverResponseError();
+                return $this->responseData($e->getMessage(), 500);
             }
             return redirect()->route('articles.index')->with('error', 'Failed to create article');
         }
